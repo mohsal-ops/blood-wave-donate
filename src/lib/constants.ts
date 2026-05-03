@@ -37,6 +37,7 @@ export type Donor = {
   gender: string | null;
   is_active: boolean;
   total_donations: number;
+  has_chronic_disease: string | null;
   created_at: string;
   updated_at: string;
 };
