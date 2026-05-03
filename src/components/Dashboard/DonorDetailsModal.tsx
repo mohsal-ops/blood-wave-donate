@@ -62,6 +62,7 @@ const DonorDetailsModal = ({ donor, open, onClose }: DonorDetailsModalProps) => 
         gender: form.gender,
         is_active: form.is_active,
         total_donations: form.total_donations,
+        has_chronic_disease: form.has_chronic_disease,
       });
       toast.success("تم تحديث البيانات بنجاح");
       setEditing(false);
