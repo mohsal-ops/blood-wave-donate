@@ -204,6 +204,67 @@ const AddDonorModal = () => {
               </PopoverContent>
             </Popover>
           </div>
+          <div>
+            <label className="text-xs text-slate-600 dark:text-slate-400 mb-1 block">تاريخ الميلاد</label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className={`${inputCls} flex items-center justify-between cursor-pointer`}
+                >
+                  <span className={form.date_of_birth ? "" : "text-slate-400"}>
+                    {form.date_of_birth
+                      ? format(form.date_of_birth, "dd/MM/yyyy", { locale: ar })
+                      : "اختر التاريخ"}
+                  </span>
+                  <CalendarIcon className="w-4 h-4 text-slate-400" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={form.date_of_birth}
+                  onSelect={(d) => setForm({ ...form, date_of_birth: d })}
+                  disabled={(d) => d > new Date()}
+                  captionLayout="dropdown"
+                  fromYear={1940}
+                  toYear={new Date().getFullYear() - 18}
+                  initialFocus
+                  className="p-3 pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+          <div>
+            <label className="text-xs text-slate-600 dark:text-slate-400 mb-1 block">هل يعاني من مرض مزمن أو معدي؟</label>
+            <div className="flex gap-2">
+              {[
+                { v: "no", label: "لا" },
+                { v: "yes", label: "نعم" },
+              ].map((o) => (
+                <button
+                  key={o.v}
+                  type="button"
+                  onClick={() => setForm({ ...form, has_chronic_disease_flag: o.v as "yes" | "no" })}
+                  className={`flex-1 py-2 rounded-lg text-sm font-semibold border transition-colors ${
+                    form.has_chronic_disease_flag === o.v
+                      ? "bg-blue-600 border-blue-600 text-white"
+                      : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+                  }`}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
+            {form.has_chronic_disease_flag === "yes" && (
+              <input
+                className={`${inputCls} mt-2`}
+                placeholder="يرجى التوضيح (اسم المرض)"
+                value={form.chronic_disease_details}
+                onChange={(e) => setForm({ ...form, chronic_disease_details: e.target.value })}
+              />
+            )}
+          </div>
           <div className="flex gap-2 pt-2">
             <button
               type="button"
