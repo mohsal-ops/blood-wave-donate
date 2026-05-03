@@ -94,6 +94,7 @@ export type Database = {
           date_of_birth: string | null
           full_name: string
           gender: string | null
+          has_chronic_disease: string | null
           id: string
           is_active: boolean
           last_donation_date: string | null
@@ -110,6 +111,7 @@ export type Database = {
           date_of_birth?: string | null
           full_name: string
           gender?: string | null
+          has_chronic_disease?: string | null
           id?: string
           is_active?: boolean
           last_donation_date?: string | null
@@ -126,6 +128,7 @@ export type Database = {
           date_of_birth?: string | null
           full_name?: string
           gender?: string | null
+          has_chronic_disease?: string | null
           id?: string
           is_active?: boolean
           last_donation_date?: string | null
