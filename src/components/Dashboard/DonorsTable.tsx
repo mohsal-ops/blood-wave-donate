@@ -278,13 +278,15 @@ const DonorsTable = ({ donors, allDonors }: DonorsTableProps) => {
 
   const buildAndDownloadCSV = (rows: Donor[], suffix = "") => {
     const BOM = "\uFEFF";
-    const headers = ["الاسم", "الفصيلة", "الهاتف", "الولاية", "البلدية", "آخر تبرع", "الحالة"];
+    const headers = ["الاسم", "الفصيلة", "الهاتف", "الولاية", "البلدية", "تاريخ الميلاد", "أمراض مزمنة/معدية", "آخر تبرع", "الحالة"];
     const dataRows = rows.map((d) => [
       d.full_name,
       d.blood_type,
       d.phone_whatsapp,
       d.wilaya || "",
       d.municipality || "",
+      d.date_of_birth || "",
+      d.has_chronic_disease || "",
       d.last_donation_date || "",
       getEligibility(d).label,
     ]);
