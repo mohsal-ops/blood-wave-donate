@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Donor } from "@/lib/constants";
-import { BLOOD_TYPES, BLOOD_TYPE_COLORS, ELIGIBILITY_DAYS, WILAYAS } from "@/lib/constants";
+import { BLOOD_TYPES, BLOOD_TYPE_COLORS, ELIGIBILITY_DAYS, WILAYAS, computeEligibility } from "@/lib/constants";
 import { format, differenceInDays, differenceInYears } from "date-fns";
 import { ar } from "date-fns/locale";
 import { Phone, MessageCircle, MapPin, Calendar, Droplets, User, Pencil, Save, X, CalendarCheck } from "lucide-react";
@@ -36,7 +36,8 @@ const DonorDetailsModal = ({ donor, open, onClose }: DonorDetailsModalProps) => 
   if (!donor) return null;
 
   const today = new Date();
-  const isEligible = !donor.last_donation_date || differenceInDays(today, new Date(donor.last_donation_date)) >= ELIGIBILITY_DAYS;
+  const eligibility = computeEligibility(donor, today);
+  const isEligible = eligibility.eligible;
   const daysUntil = donor.last_donation_date
     ? Math.max(0, ELIGIBILITY_DAYS - differenceInDays(today, new Date(donor.last_donation_date)))
     : 0;
@@ -63,6 +64,8 @@ const DonorDetailsModal = ({ donor, open, onClose }: DonorDetailsModalProps) => 
         is_active: form.is_active,
         total_donations: form.total_donations,
         has_chronic_disease: form.has_chronic_disease,
+        eligibility_override: form.eligibility_override ?? null,
+        ineligibility_reason: form.ineligibility_reason ?? null,
       });
       toast.success("تم تحديث البيانات بنجاح");
       setEditing(false);
