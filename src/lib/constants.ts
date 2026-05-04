@@ -1,3 +1,5 @@
+import { differenceInDays } from "date-fns";
+
 export const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"] as const;
 
 export const BLOOD_TYPE_COLORS: Record<string, { bg: string; text: string; border: string }> = {
@@ -43,8 +45,6 @@ export type Donor = {
   created_at: string;
   updated_at: string;
 };
-
-import { differenceInDays } from "date-fns";
 
 export type EligibilityResult = {
   eligible: boolean;
