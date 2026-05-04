@@ -1,7 +1,7 @@
 import { Users, UserCheck, CalendarHeart, Droplets } from "lucide-react";
 import type { Donor } from "@/lib/constants";
-import { ELIGIBILITY_DAYS } from "@/lib/constants";
-import { differenceInDays, startOfMonth, isAfter } from "date-fns";
+import { computeEligibility } from "@/lib/constants";
+import { startOfMonth, isAfter } from "date-fns";
 
 interface StatsCardsProps {
   donors: Donor[];
@@ -13,11 +13,7 @@ const StatsCards = ({ donors }: StatsCardsProps) => {
 
   const totalDonors = donors.length;
 
-  const eligibleDonors = donors.filter((d) => {
-    if (!d.is_active) return false;
-    if (!d.last_donation_date) return true;
-    return differenceInDays(today, new Date(d.last_donation_date)) >= ELIGIBILITY_DAYS;
-  }).length;
+  const eligibleDonors = donors.filter((d) => computeEligibility(d, today).eligible).length;
 
   const donationsThisMonth = donors.filter(
     (d) => d.last_donation_date && isAfter(new Date(d.last_donation_date), monthStart)

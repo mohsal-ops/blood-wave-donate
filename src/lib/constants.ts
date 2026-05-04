@@ -1,3 +1,5 @@
+import { differenceInDays } from "date-fns";
+
 export const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"] as const;
 
 export const BLOOD_TYPE_COLORS: Record<string, { bg: string; text: string; border: string }> = {
@@ -38,6 +40,47 @@ export type Donor = {
   is_active: boolean;
   total_donations: number;
   has_chronic_disease: string | null;
+  eligibility_override: string | null; // 'eligible' | 'not_eligible' | null (auto)
+  ineligibility_reason: string | null;
   created_at: string;
   updated_at: string;
+};
+
+export type EligibilityResult = {
+  eligible: boolean;
+  days: number;
+  label: string;
+  reason?: string;
+  source: "override" | "inactive" | "chronic" | "recent" | "auto";
+};
+
+const isChronic = (val: string | null | undefined) => {
+  if (!val) return false;
+  const trimmed = val.trim();
+  if (!trimmed) return false;
+  if (trimmed === "لا" || trimmed.toLowerCase() === "no") return false;
+  return true;
+};
+
+export const computeEligibility = (donor: Donor, today: Date = new Date()): EligibilityResult => {
+  if (donor.eligibility_override === "not_eligible") {
+    return { eligible: false, days: 0, label: "غير مؤهل (يدوي)", reason: donor.ineligibility_reason || undefined, source: "override" };
+  }
+  if (donor.eligibility_override === "eligible") {
+    return { eligible: true, days: 0, label: "مؤهل (يدوي) ✅", source: "override" };
+  }
+  if (!donor.is_active) {
+    return { eligible: false, days: 0, label: "غير نشط", source: "inactive" };
+  }
+  if (isChronic(donor.has_chronic_disease)) {
+    return { eligible: false, days: 0, label: "غير مؤهل (مرض)", reason: donor.has_chronic_disease || undefined, source: "chronic" };
+  }
+  if (!donor.last_donation_date) {
+    return { eligible: true, days: 0, label: "مؤهل (لم يتبرع)", source: "auto" };
+  }
+  const days = differenceInDays(today, new Date(donor.last_donation_date));
+  if (days >= ELIGIBILITY_DAYS) {
+    return { eligible: true, days: 0, label: "مؤهل ✅", source: "auto" };
+  }
+  return { eligible: false, days: ELIGIBILITY_DAYS - days, label: `غير مؤهل - ${ELIGIBILITY_DAYS - days} يوم`, source: "recent" };
 };

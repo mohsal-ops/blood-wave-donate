@@ -9,7 +9,7 @@ import {
   type ColumnDef,
   type SortingState,
 } from "@tanstack/react-table";
-import { differenceInDays, differenceInYears, format } from "date-fns";
+import { differenceInYears, format } from "date-fns";
 import { ar } from "date-fns/locale";
 import {
   Phone,
@@ -21,7 +21,7 @@ import {
   Download,
 } from "lucide-react";
 import type { Donor } from "@/lib/constants";
-import { BLOOD_TYPE_COLORS, ELIGIBILITY_DAYS } from "@/lib/constants";
+import { BLOOD_TYPE_COLORS, ELIGIBILITY_DAYS, computeEligibility } from "@/lib/constants";
 import { useDeleteDonor } from "@/hooks/useDonors";
 import DonorDetailsModal from "./DonorDetailsModal";
 import {
@@ -51,19 +51,7 @@ const DonorsTable = ({ donors, allDonors }: DonorsTableProps) => {
 
   const today = new Date();
 
-  const getEligibility = (donor: Donor) => {
-    if (!donor.is_active) return { eligible: false, days: 0, label: "غير نشط" };
-    if (!donor.last_donation_date)
-      return { eligible: true, days: 0, label: "مؤهل (لم يتبرع)" };
-    const days = differenceInDays(today, new Date(donor.last_donation_date));
-    if (days >= ELIGIBILITY_DAYS)
-      return { eligible: true, days: 0, label: "مؤهل ✅" };
-    return {
-      eligible: false,
-      days: ELIGIBILITY_DAYS - days,
-      label: `غير مؤهل - ${ELIGIBILITY_DAYS - days} يوم`,
-    };
-  };
+  const getEligibility = (donor: Donor) => computeEligibility(donor, today);
 
   const columns = useMemo<ColumnDef<Donor>[]>(
     () => [
@@ -189,6 +177,7 @@ const DonorsTable = ({ donors, allDonors }: DonorsTableProps) => {
           const e = getEligibility(row.original);
           return (
             <span
+              title={e.reason || ""}
               className={`px-2 py-1 rounded-full text-xs font-semibold ${e.eligible ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : "bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400"}`}
             >
               {e.label}

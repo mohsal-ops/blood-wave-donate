@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Donor } from "@/lib/constants";
-import { BLOOD_TYPES, BLOOD_TYPE_COLORS, ELIGIBILITY_DAYS, WILAYAS } from "@/lib/constants";
+import { BLOOD_TYPES, BLOOD_TYPE_COLORS, ELIGIBILITY_DAYS, WILAYAS, computeEligibility } from "@/lib/constants";
 import { format, differenceInDays, differenceInYears } from "date-fns";
 import { ar } from "date-fns/locale";
 import { Phone, MessageCircle, MapPin, Calendar, Droplets, User, Pencil, Save, X, CalendarCheck } from "lucide-react";
@@ -36,7 +36,8 @@ const DonorDetailsModal = ({ donor, open, onClose }: DonorDetailsModalProps) => 
   if (!donor) return null;
 
   const today = new Date();
-  const isEligible = !donor.last_donation_date || differenceInDays(today, new Date(donor.last_donation_date)) >= ELIGIBILITY_DAYS;
+  const eligibility = computeEligibility(donor, today);
+  const isEligible = eligibility.eligible;
   const daysUntil = donor.last_donation_date
     ? Math.max(0, ELIGIBILITY_DAYS - differenceInDays(today, new Date(donor.last_donation_date)))
     : 0;
@@ -63,6 +64,8 @@ const DonorDetailsModal = ({ donor, open, onClose }: DonorDetailsModalProps) => 
         is_active: form.is_active,
         total_donations: form.total_donations,
         has_chronic_disease: form.has_chronic_disease,
+        eligibility_override: form.eligibility_override ?? null,
+        ineligibility_reason: form.ineligibility_reason ?? null,
       });
       toast.success("تم تحديث البيانات بنجاح");
       setEditing(false);
@@ -116,8 +119,16 @@ const DonorDetailsModal = ({ donor, open, onClose }: DonorDetailsModalProps) => 
               </span>
             </div>
 
-            <div className={`flex items-center gap-2 px-3 py-2 rounded-xl ${isEligible ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400" : "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400"}`}>
-              <span>{isEligible ? "✅ مؤهل للتبرع" : `❌ غير مؤهل - ${daysUntil} يوم متبقي`}</span>
+            <div className={`flex flex-col gap-1 px-3 py-2 rounded-xl ${isEligible ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400" : "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400"}`}>
+              <span className="font-medium">
+                {isEligible ? `✅ ${eligibility.label}` : `❌ ${eligibility.label}${eligibility.source === "recent" ? "" : ""}`}
+              </span>
+              {eligibility.reason && (
+                <span className="text-xs opacity-80">السبب: {eligibility.reason}</span>
+              )}
+              {!isEligible && eligibility.source === "recent" && (
+                <span className="text-xs opacity-80">{daysUntil} يوم متبقي</span>
+              )}
             </div>
 
             <div className="space-y-3 text-sm">
@@ -321,6 +332,34 @@ const DonorDetailsModal = ({ donor, open, onClose }: DonorDetailsModalProps) => 
                 value={form.has_chronic_disease ?? ""}
                 onChange={(e) => setField("has_chronic_disease", e.target.value || null)}
               />
+            </div>
+
+            <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-3 space-y-3 bg-slate-50/60 dark:bg-slate-800/40">
+              <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">الأهلية للتبرع (تحكم يدوي)</Label>
+              <Select
+                value={form.eligibility_override ?? "auto"}
+                onValueChange={(v) => setField("eligibility_override", v === "auto" ? null : v)}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">تلقائي (حسب آخر تبرع والأمراض)</SelectItem>
+                  <SelectItem value="eligible">مؤهل يدوياً</SelectItem>
+                  <SelectItem value="not_eligible">غير مؤهل يدوياً</SelectItem>
+                </SelectContent>
+              </Select>
+              {form.eligibility_override === "not_eligible" && (
+                <div>
+                  <Label className="text-xs">سبب عدم الأهلية</Label>
+                  <Input
+                    placeholder="مثال: مرض، ضغط الدم، حمل..."
+                    value={form.ineligibility_reason ?? ""}
+                    onChange={(e) => setField("ineligibility_reason", e.target.value || null)}
+                  />
+                </div>
+              )}
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                يتم اعتبار المتبرع غير مؤهل تلقائياً إذا كان لديه مرض مزمن/معدي. يمكنك تجاوز ذلك يدوياً.
+              </p>
             </div>
 
             <div className="flex gap-2 pt-2">

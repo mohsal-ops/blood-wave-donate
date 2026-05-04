@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useDonors } from "@/hooks/useDonors";
 import { LogOut, Droplets } from "lucide-react";
-import { differenceInDays, differenceInYears } from "date-fns";
+import { differenceInYears } from "date-fns";
 import DashboardBackground from "@/components/Dashboard/DashboardBackground";
 import StatsCards from "@/components/Dashboard/StatsCards";
 import DonorsFilters, { type FiltersState } from "@/components/Dashboard/DonorsFilters";
@@ -11,7 +11,7 @@ import DonorsTable from "@/components/Dashboard/DonorsTable";
 import BloodTypeChart from "@/components/Dashboard/BloodTypeChart";
 import EmergencyModal from "@/components/Dashboard/EmergencyModal";
 import AddDonorModal from "@/components/Dashboard/AddDonorModal";
-import { ELIGIBILITY_DAYS } from "@/lib/constants";
+import { ELIGIBILITY_DAYS, computeEligibility } from "@/lib/constants";
 
 const defaultFilters: FiltersState = {
   search: "",
@@ -38,9 +38,9 @@ const Dashboard = () => {
       if (filters.bloodType && d.blood_type !== filters.bloodType) return false;
       if (filters.wilaya && d.wilaya !== filters.wilaya) return false;
       if (filters.eligibility) {
-        const daysAgo = d.last_donation_date ? differenceInDays(today, new Date(d.last_donation_date)) : null;
-        if (filters.eligibility === "eligible" && daysAgo !== null && daysAgo < ELIGIBILITY_DAYS) return false;
-        if (filters.eligibility === "not_eligible" && (daysAgo === null || daysAgo >= ELIGIBILITY_DAYS)) return false;
+        const e = computeEligibility(d, today);
+        if (filters.eligibility === "eligible" && !e.eligible) return false;
+        if (filters.eligibility === "not_eligible" && e.eligible) return false;
         if (filters.eligibility === "never" && d.last_donation_date) return false;
       }
       if (d.date_of_birth) {
